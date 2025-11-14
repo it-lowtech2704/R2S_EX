@@ -6,6 +6,7 @@ import com.springboot.exception.NotFoundException;
 import com.springboot.mapper.CustomerMapper;
 import com.springboot.repository.CustomerRepo;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,34 +20,45 @@ public class CustomerService {
     }
 
     public List<CustomerDTO> getAll() {
-        return customerRepo.findAll().stream().map(CustomerMapper::toDTO).toList();
+        return customerRepo.findAll()
+                .stream()
+                .map(CustomerMapper::toDTO)
+                .toList();
     }
 
-    public  CustomerDTO getById(int id) {
-        return CustomerMapper.toDTO(customerRepo.findById(id).orElseThrow(()->new NotFoundException(id)));
+    public CustomerDTO getById(Long id) {
+        Customer c = customerRepo.findById(id)
+                // Nếu NotFoundException hiện chỉ nhận int, dùng bản nhận String:
+                .orElseThrow(() -> new NotFoundException("Customer not found with id = " + id));
+        return CustomerMapper.toDTO(c);
     }
 
-    public CustomerDTO create(CustomerDTO customerDTO) {
-        return CustomerMapper.toDTO(customerRepo.save(CustomerMapper.toEntity(customerDTO)));
+    @Transactional
+    public CustomerDTO create(CustomerDTO dto) {
+        Customer saved = customerRepo.save(CustomerMapper.toEntity(dto));
+        return CustomerMapper.toDTO(saved);
     }
 
-    public CustomerDTO update(CustomerDTO customerDTO, int id) {
-         Customer customer = customerRepo.findById(id).orElseThrow(() -> new NotFoundException(id));
+    @Transactional
+    public CustomerDTO update(Long id, CustomerDTO dto) {
+        Customer c = customerRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Customer not found with id = " + id));
 
-         customer.setAddress(customerDTO.getAddress());
-         customer.setCustomerName(customerDTO.getCustomerName());
-         customer.setCity(customerDTO.getCity());
-         customer.setCountry(customerDTO.getCountry());
-         customer.setContactName(customerDTO.getContactName());
-         customer.setPostalcode(customerDTO.getPostalCode());
+        c.setAddress(dto.getAddress());
+        c.setCustomerName(dto.getCustomerName());
+        c.setCity(dto.getCity());
+        c.setCountry(dto.getCountry());
+        c.setContactName(dto.getContactName());
+        c.setPostalcode(dto.getPostalCode());
 
-         return CustomerMapper.toDTO(customerRepo.save(customer));
-
+        return CustomerMapper.toDTO(customerRepo.save(c));
     }
 
-    public void deleteById(int id) {
-        if (!customerRepo.existsById(id)) throw  new NotFoundException(id);
+    @Transactional
+    public void deleteById(Long id) {
+        if (!customerRepo.existsById(id)) {
+            throw new NotFoundException("Customer not found with id = " + id);
+        }
         customerRepo.deleteById(id);
     }
 }
-
