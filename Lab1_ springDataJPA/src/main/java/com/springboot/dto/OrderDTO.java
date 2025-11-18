@@ -1,7 +1,7 @@
 package com.springboot.dto;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Past;
 
 import java.time.LocalDate;
 
@@ -10,7 +10,7 @@ public class OrderDTO {
 
 
     @NotNull(message = "Order date is required")
-    @PastOrPresent(message = "Order date must be today or in the past")
+    @Past(message = "Order date must be today or in the past")
     private LocalDate orderDate;
 
     private Integer employee_id;
